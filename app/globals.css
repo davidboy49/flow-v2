@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design Tokens ─────────────────────────────────────────── */
+:root {
+  --bg:           #09090b;   /* zinc-950 */
+  --surface:      #18181b;   /* zinc-900 */
+  --border:       #27272a;   /* zinc-800 */
+  --muted:        #a1a1aa;   /* zinc-400 */
+  --body:         #f4f4f5;   /* zinc-100 */
+  --accent:       #10b981;   /* emerald-500 */
+  --positive:     #34d399;   /* emerald-400 */
+  --negative:     #f87171;   /* red-400 */
+  --warning:      #facc15;   /* yellow-400 */
+
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  --radius:       0.5rem;
+  --radius-lg:    0.75rem;
+  --sidebar-w:    14rem;    /* 56px collapsed, 224px expanded */
+}
+
+/* ── Base Reset ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-font-smoothing: antialiased; }
+
+body {
+  background-color: var(--bg);
+  color: var(--body);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Typography utilities ──────────────────────────────────── */
+.text-page-heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--body);
+  letter-spacing: -0.01em;
+}
+
+.text-section-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #71717a; /* zinc-500 */
+}
+
+.text-body { font-size: 0.875rem; color: #d4d4d8; /* zinc-300 */ }
+.text-muted { color: var(--muted); }
+
+/* Financial figures */
+.num {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.num-positive { color: var(--positive); }
+.num-negative { color: var(--negative); }
+
+/* ── Card / Surface ────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+
+/* ── Priority badge ────────────────────────────────────────── */
+.badge-high   { background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+.badge-medium { background: #422006; color: #facc15; border: 1px solid #78350f; }
+.badge-low    { background: #27272a; color: #a1a1aa; border: 1px solid #3f3f46; }
+
+/* ── Progress bar sub-bar thresholds ──────────────────────── */
+.budget-bar-neutral  { background: var(--accent); }
+.budget-bar-warning  { background: #eab308; }  /* yellow-500 */
+.budget-bar-exceeded { background: #ef4444; }  /* red-500 */
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+/* ── Focus ring ─────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Transitions ────────────────────────────────────────────── */
+.transition-base { transition: all 150ms ease; }
+
+/* ── Inline form slide-open animation ──────────────────────── */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-down { animation: slideDown 180ms ease forwards; }
+
+/* ── Fade in ────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 200ms ease forwards; }
