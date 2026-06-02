@@ -22,7 +22,8 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax',
     })
     return response
-  } catch {
+  } catch (error) {
+    console.error('Session creation error:', error)
     return NextResponse.json({ error: 'Failed to create session' }, { status: 401 })
   }
 }
