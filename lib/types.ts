@@ -60,3 +60,29 @@ export interface GoalStats {
   achievements: Achievement[]
   monthlyTotals: MonthlyTotal[]
 }
+
+export interface Category {
+  id: string
+  name: string
+  color: string
+  active: boolean
+}
+
+export interface PresetAmount {
+  id: string
+  amount: number
+  label?: string
+  active: boolean
+}
+
+export interface MemberProfile {
+  id: string
+  nickname: string
+  active: boolean
+}
+
+export interface UserProfile {
+  nickname: string
+  active: boolean
+}
+

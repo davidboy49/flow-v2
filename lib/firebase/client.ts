@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app'
-import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth'
+import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -11,11 +11,6 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
 
+// auth is kept for signInWithCustomToken() — Firestore security rules require a Firebase user
 export const auth = getAuth(app)
 export const db = getFirestore(app)
-
-// SSO providers
-export const googleProvider = new GoogleAuthProvider()
-export const microsoftProvider = new OAuthProvider('microsoft.com')
-// For enterprise SAML/OIDC — configure the provider ID in Firebase Console first
-export const samlProvider = new OAuthProvider('saml.your-provider-id')

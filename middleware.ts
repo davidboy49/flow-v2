@@ -1,48 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-function parseJwt(token: string) {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3) return null
-    const base64Url = parts[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    )
-    return JSON.parse(jsonPayload)
-  } catch {
-    return null
-  }
-}
-
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Public routes — always allow
-  if (pathname.startsWith('/login') || pathname.startsWith('/api/auth')) {
+  // Always allow: login page, NextAuth callback routes, static assets
+  if (
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/api/auth')
+  ) {
     return NextResponse.next()
   }
 
-  const sessionCookie = req.cookies.get('session')?.value
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
 
-  if (!sessionCookie) {
-    return NextResponse.redirect(new URL('/login', req.url))
-  }
-
-  const payload = parseJwt(sessionCookie)
-  if (!payload || !payload.exp || payload.exp * 1000 < Date.now()) {
-    const response = NextResponse.redirect(new URL('/login', req.url))
-    response.cookies.set('session', '', { maxAge: 0, path: '/' })
-    return response
+  if (!token) {
+    const loginUrl = new URL('/login', req.url)
+    req.nextUrl.searchParams.forEach((value, key) => {
+      loginUrl.searchParams.set(key, value)
+    })
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/(?!auth)).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
-

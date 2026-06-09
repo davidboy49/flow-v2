@@ -22,7 +22,8 @@ export function TransactionTable({ transactions, goals, onDeleted }: Transaction
   const filtered = transactions.filter(t => {
     const matchSearch = t.description.toLowerCase().includes(search.toLowerCase())
     const matchType = typeFilter === 'all' || t.type === typeFilter
-    const matchGoal = goalFilter === 'all' || t.goalId === goalFilter
+    const matchGoal = goalFilter === 'all'
+      || (goalFilter === 'unlinked' ? !t.goalId : t.goalId === goalFilter)
     return matchSearch && matchType && matchGoal
   })
 

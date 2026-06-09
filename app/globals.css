@@ -15,6 +15,7 @@
   --positive:     #34d399;   /* emerald-400 */
   --negative:     #f87171;   /* red-400 */
   --warning:      #facc15;   /* yellow-400 */
+  --hover-rgb:    39, 39, 42;
 
   --font-sans:    'Inter', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
@@ -24,7 +25,104 @@
   --sidebar-w:    14rem;    /* 56px collapsed, 224px expanded */
 }
 
+.light {
+  --bg:           #f9fafb;   /* gray-50 */
+  --surface:      #ffffff;   /* white */
+  --border:       #e5e7eb;   /* gray-200 */
+  --muted:        #6b7280;   /* gray-500 */
+  --body:         #09090b;   /* zinc-950 */
+  --accent:       #059669;   /* emerald-600 */
+  --positive:     #10b981;   /* emerald-500 */
+  --negative:     #ef4444;   /* red-500 */
+  --warning:      #d97706;   /* amber-600 */
+  --hover-rgb:    229, 231, 235;
+}
+
+/* ── Light mode text overrides ──────────────────────────────── */
+.light body {
+  color: var(--body);
+}
+
+.light .text-body {
+  color: #374151; /* gray-700 */
+}
+
+.light .text-zinc-100 { color: #09090b !important; }
+.light .text-zinc-200 { color: #18181b !important; }
+.light .text-zinc-300 { color: #27272a !important; }
+.light .text-zinc-400 { color: #4b5563 !important; }
+.light .text-zinc-500 { color: #6b7280 !important; }
+.light .text-zinc-600 { color: #4b5563 !important; }
+
+/* ── Light mode priority badges ─────────────────────────────── */
+.light .badge-low {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.light .badge-medium {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+}
+
+.light .badge-high {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+/* ── Light mode form controls ───────────────────────────────── */
+.light input,
+.light textarea {
+  color: #09090b !important;
+  background-color: #ffffff !important;
+}
+
+.light select {
+  color: #09090b !important;
+  background-color: #ffffff !important;
+}
+
+/* option elements pick up the system bg in light mode — force white */
+.light option {
+  background-color: #ffffff;
+  color: #09090b;
+}
+
+/* ── Light mode FAB buttons ─────────────────────────────────── */
+.light .fab-sub-deposit {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.light .fab-sub-withdrawal {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ── Light mode card ────────────────────────────────────────── */
+.light .card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+/* ── Light mode hover rows ──────────────────────────────────── */
+.light tr:hover td {
+  background: rgba(229, 231, 235, 0.5);
+}
+
+/* ── Light mode scrollbar ───────────────────────────────────── */
+.light ::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
 /* ── Base Reset ────────────────────────────────────────────── */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { -webkit-font-smoothing: antialiased; }
@@ -50,10 +148,10 @@ body {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #71717a; /* zinc-500 */
+  color: var(--muted);
 }
 
-.text-body { font-size: 0.875rem; color: #d4d4d8; /* zinc-300 */ }
+.text-body { font-size: 0.875rem; color: var(--body); }
 .text-muted { color: var(--muted); }
 
 /* Financial figures */
@@ -111,3 +209,88 @@ body {
   to   { opacity: 1; }
 }
 .animate-fade-in { animation: fadeIn 200ms ease forwards; }
+
+/* ── Floating Action Buttons (FAB) ────────────────────────── */
+.fab-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.fab-main {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.fab-main:hover {
+  transform: scale(1.05);
+  background: var(--positive);
+}
+
+.fab-sub-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fab-sub-container.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.fab-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.fab-sub:hover {
+  transform: scale(1.02);
+}
+
+.fab-sub-deposit {
+  background: #052e16;
+  color: var(--positive);
+}
+.light .fab-sub-deposit {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.fab-sub-withdrawal {
+  background: #450a0a;
+  color: var(--negative);
+}
+.light .fab-sub-withdrawal {
+  background: #fee2e2;
+  color: #991b1b;
+}

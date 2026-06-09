@@ -3,13 +3,12 @@ import { useState, useEffect } from 'react'
 import { useFlowsStore } from '@/store/flows-store'
 import { GoalGrid } from '@/components/goals/goal-grid'
 import { GoalForm } from '@/components/goals/goal-form'
-import { SavingsGoal, AllocationResult } from '@/lib/types'
+import { AllocationResult } from '@/lib/types'
 import { Plus, Flame, Target, Zap, Loader2 } from 'lucide-react'
 
 export default function DashboardPage() {
   const { goals, getAuthHeader } = useFlowsStore()
   const [showGoalForm, setShowGoalForm] = useState(false)
-  const [editGoal, setEditGoal] = useState<SavingsGoal | null>(null)
   const [streak, setStreak] = useState(0)
   const [allocAmount, setAllocAmount] = useState('')
   const [allocPreview, setAllocPreview] = useState<AllocationResult[] | null>(null)
@@ -128,7 +127,7 @@ export default function DashboardPage() {
       {/* Goals grid */}
       <section className="space-y-3">
         <h2 className="text-section-label">Goals</h2>
-        <GoalGrid goals={goals} onEdit={setEditGoal} />
+        <GoalGrid goals={goals} />
       </section>
 
       {/* Auto-allocate panel */}
@@ -149,7 +148,7 @@ export default function DashboardPage() {
               placeholder="1000.00"
               value={allocAmount}
               onChange={e => { setAllocAmount(e.target.value); setAllocPreview(null) }}
-              className="w-full px-3 py-2 rounded-md text-sm text-zinc-100 outline-none focus:ring-1 transition-base"
+              className="w-full px-3 py-2 rounded-md text-sm outline-none focus:ring-1 transition-base"
               style={{ ...inputStyle, '--tw-ring-color': 'var(--accent)' } as React.CSSProperties}
             />
           </div>

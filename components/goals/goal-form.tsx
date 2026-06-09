@@ -62,8 +62,8 @@ export function GoalForm({ onClose, onCreated }: GoalFormProps) {
     }
   }
 
-  const inputClass = "w-full px-3 py-2 rounded-md text-sm text-zinc-100 outline-none focus:ring-1 transition-base"
-  const inputStyle = { background: 'var(--bg)', border: '1px solid var(--border)', '--tw-ring-color': 'var(--accent)' } as React.CSSProperties
+  const inputClass = "w-full px-3 py-2 rounded-md text-sm outline-none focus:ring-1 transition-base"
+  const inputStyle = { background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--body)', '--tw-ring-color': 'var(--accent)' } as React.CSSProperties
 
   return (
     <form

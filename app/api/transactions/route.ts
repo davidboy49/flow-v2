@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const uid = await verifyIdToken(req)
-    const { goalId = null, description, amount, date, type, category } = await req.json()
+    const { goalId = null, description, amount, date, type, category, memberId = null } = await req.json()
 
     if (!description || !amount || !date || !type || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ref = await adminDb.collection(`users/${uid}/transactions`).add({
-      userId: uid, goalId, description, amount, date, type, category,
+      userId: uid, goalId, description, amount, date, type, category, memberId,
       createdAt: FieldValue.serverTimestamp(),
     })
 

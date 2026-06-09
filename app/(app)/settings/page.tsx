@@ -1,13 +1,20 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useFlowsStore } from '@/store/flows-store'
-import { signOut } from 'firebase/auth'
-import { auth } from '@/lib/firebase/client'
-import { Loader2, LogOut, Settings as SettingsIcon, Pencil, Check, X } from 'lucide-react'
+import { signOut } from 'next-auth/react'
+import {
+  Loader2,
+  LogOut,
+  Pencil,
+  Check,
+  X,
+  Trash2,
+  Plus
+} from 'lucide-react'
 import { SavingsGoal } from '@/lib/types'
 
 export default function SettingsPage() {
-  const { goals, getAuthHeader } = useFlowsStore()
+  const { goals, getAuthHeader, members, profile } = useFlowsStore()
   const [signingOut, setSigningOut] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({
@@ -19,15 +26,27 @@ export default function SettingsPage() {
   const [saveLoading, setSaveLoading] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
+  // Profile Form States
+  const [myNickname, setMyNickname] = useState('')
+  const [myActive, setMyActive] = useState(true)
+  const [savingProfile, setSavingProfile] = useState(false)
+
+  // Sub-member States
+  const [newMemberNickname, setNewMemberNickname] = useState('')
+
+  useEffect(() => {
+    if (profile) {
+      setMyNickname(profile.nickname ?? '')
+      setMyActive(profile.active !== false)
+    }
+  }, [profile])
+
   async function handleSignOut() {
     setSigningOut(true)
     try {
-      await fetch('/api/auth/session', { method: 'DELETE' })
-      await signOut(auth)
-      window.location.href = '/login'
+      await signOut({ callbackUrl: '/login' })
     } catch (e) {
       console.error(e)
-    } finally {
       setSigningOut(false)
     }
   }
@@ -84,6 +103,93 @@ export default function SettingsPage() {
     }
   }
 
+  // Profile Save
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingProfile(true)
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nickname: myNickname.trim(),
+          active: myActive,
+        }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error ?? 'Failed to update profile')
+      }
+    } catch (err) {
+      console.error('Error saving profile:', err)
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  // Add sub-member
+  async function handleAddMember(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newMemberNickname.trim()) return
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nickname: newMemberNickname.trim(),
+          active: true,
+        }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error ?? 'Failed to add member')
+      }
+      setNewMemberNickname('')
+    } catch (err) {
+      console.error('Error adding member:', err)
+    }
+  }
+
+  // Toggle member active status
+  async function toggleMemberActive(memberId: string, currentActive: boolean) {
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`/api/members/${memberId}`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          active: !currentActive,
+        }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error ?? 'Failed to update member')
+      }
+    } catch (err) {
+      console.error('Error toggling member status:', err)
+    }
+  }
+
+  // Delete member
+  async function handleDeleteMember(memberId: string) {
+    if (!confirm('Are you sure you want to delete this member?')) return
+    try {
+      const headers = await getAuthHeader()
+      const res = await fetch(`/api/members/${memberId}`, {
+        method: 'DELETE',
+        headers,
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error ?? 'Failed to delete member')
+      }
+    } catch (err) {
+      console.error('Error deleting member:', err)
+    }
+  }
+
   const inputStyle = {
     background: 'var(--bg)',
     border: '1px solid var(--border)',
@@ -92,12 +198,123 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-3xl mx-auto space-y-8 pb-12">
       {/* Header */}
       <div>
         <h1 className="text-page-heading">Settings</h1>
-        <p className="text-body mt-0.5">Manage your goals and account settings</p>
+        <p className="text-body mt-0.5">Manage your preferences, goals, and account settings</p>
       </div>
+
+      {/* User Management Section */}
+      <section className="space-y-4">
+        <h2 className="text-section-label">User Management</h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Profile form */}
+          <div className="card space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-200">Your Profile</h3>
+              <p className="text-xs text-zinc-500">Configure your personal nickname and status</p>
+            </div>
+            <form onSubmit={handleSaveProfile} className="space-y-3">
+              <div>
+                <label className="text-section-label block mb-1">Nickname</label>
+                <input
+                  type="text"
+                  placeholder="My nickname"
+                  value={myNickname}
+                  onChange={e => setMyNickname(e.target.value)}
+                  className="w-full px-3 py-2 text-sm outline-none focus:ring-1 transition-base"
+                  style={inputStyle}
+                  required
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="profile-active-chk"
+                  checked={myActive}
+                  onChange={e => setMyActive(e.target.checked)}
+                  className="rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900 w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="profile-active-chk" className="text-sm text-zinc-300 select-none cursor-pointer">
+                  Mark Profile as Active
+                </label>
+              </div>
+              <button
+                type="submit"
+                disabled={savingProfile}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-semibold text-zinc-950 transition-base disabled:opacity-50"
+                style={{ background: 'var(--accent)' }}
+              >
+                {savingProfile && <Loader2 size={12} className="animate-spin" />}
+                Save Profile
+              </button>
+            </form>
+          </div>
+
+          {/* Sub-members section */}
+          <div className="card space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-200">Family Members / Sub-Users</h3>
+                <p className="text-xs text-zinc-500">Manage profiles you want to track transactions for</p>
+              </div>
+
+              {/* Members List */}
+              <div className="max-h-36 overflow-y-auto space-y-2 pr-1">
+                {members.length === 0 ? (
+                  <p className="text-xs text-zinc-500 text-center py-4">No other members configured.</p>
+                ) : (
+                  members.map(m => (
+                    <div
+                      key={m.id}
+                      className="flex items-center justify-between p-2 rounded-md border text-xs"
+                      style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-semibold text-zinc-200 truncate">{m.nickname}</span>
+                        <span
+                          onClick={() => toggleMemberActive(m.id, m.active)}
+                          className="text-[10px] mt-0.5 cursor-pointer hover:underline font-semibold"
+                          style={{ color: m.active ? 'var(--positive)' : 'var(--muted)' }}
+                        >
+                          {m.active ? 'Active' : 'Inactive'} (Click to toggle)
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteMember(m.id)}
+                        className="text-zinc-500 hover:text-red-400 p-1 rounded transition-base"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <form onSubmit={handleAddMember} className="flex gap-2 pt-2 border-t border-zinc-800">
+              <input
+                type="text"
+                placeholder="Spouse / Child"
+                value={newMemberNickname}
+                onChange={e => setNewMemberNickname(e.target.value)}
+                className="flex-1 px-2.5 py-1.5 text-xs outline-none focus:ring-1 transition-base"
+                style={inputStyle}
+                required
+              />
+              <button
+                type="submit"
+                className="px-3 py-1.5 rounded-md text-xs font-semibold text-zinc-950 flex items-center gap-1 transition-base"
+                style={{ background: 'var(--accent)' }}
+              >
+                <Plus size={12} /> Add
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
 
       {/* Goal configuration */}
       <section className="space-y-4">

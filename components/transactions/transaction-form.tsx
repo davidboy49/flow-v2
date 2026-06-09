@@ -8,10 +8,11 @@ interface TransactionFormProps {
   goals: SavingsGoal[]
   onClose: () => void
   onCreated?: () => void
+  prefilledType?: 'deposit' | 'withdrawal'
 }
 
-export function TransactionForm({ goals, onClose, onCreated }: TransactionFormProps) {
-  const { getAuthHeader } = useFlowsStore()
+export function TransactionForm({ goals, onClose, onCreated, prefilledType }: TransactionFormProps) {
+  const { getAuthHeader, categories, presets, members } = useFlowsStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -19,8 +20,9 @@ export function TransactionForm({ goals, onClose, onCreated }: TransactionFormPr
     description: '',
     amount: '',
     date: new Date().toISOString().slice(0, 10),
-    type: 'deposit' as 'deposit' | 'withdrawal',
-    category: '', // always free-text — never a select
+    type: prefilledType ?? ('deposit' as 'deposit' | 'withdrawal'),
+    category: '',
+    memberId: '',
   })
 
   function set(field: string, value: string) {
@@ -45,6 +47,7 @@ export function TransactionForm({ goals, onClose, onCreated }: TransactionFormPr
           date: form.date,
           type: form.type,
           category: form.category.trim(),
+          memberId: form.memberId || null,
         }),
       })
       if (!res.ok) {
@@ -60,12 +63,15 @@ export function TransactionForm({ goals, onClose, onCreated }: TransactionFormPr
     }
   }
 
-  const inputClass = "w-full px-3 py-2 rounded-md text-sm text-zinc-100 outline-none focus:ring-1 transition-base"
+  const inputClass = "w-full px-3 py-2 rounded-md text-sm outline-none focus:ring-1 transition-base"
   const inputStyle = {
     background: 'var(--bg)',
     border: '1px solid var(--border)',
+    color: 'var(--body)',
     '--tw-ring-color': 'var(--accent)',
   } as React.CSSProperties
+
+  const activeMembers = members.filter(m => m.active)
 
   return (
     <form
@@ -74,7 +80,9 @@ export function TransactionForm({ goals, onClose, onCreated }: TransactionFormPr
       className="card animate-slide-down space-y-4"
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-zinc-100">New Transaction</h3>
+        <h3 className="text-sm font-semibold text-zinc-100">
+          New {form.type.charAt(0).toUpperCase() + form.type.slice(1)}
+        </h3>
         <button type="button" onClick={onClose} className="text-zinc-500 hover:text-zinc-300 transition-base">
           <X size={16} />
         </button>
@@ -101,18 +109,24 @@ export function TransactionForm({ goals, onClose, onCreated }: TransactionFormPr
           />
         </div>
 
-        {/* Category — always free-text per spec */}
+        {/* Category — select populated from active categories only */}
         <div className="col-span-2">
           <label className="text-section-label block mb-1">Category</label>
-          <input
-            id="input-tx-category"
+          <select
+            id="select-tx-category"
             className={inputClass}
-            style={inputStyle}
-            placeholder="e.g. Salary, Rent, Food..."
+            style={{ ...inputStyle, cursor: 'pointer' }}
             value={form.category}
             onChange={e => set('category', e.target.value)}
             required
-          />
+          >
+            <option value="">Select a category</option>
+            {categories.filter(c => c.active).map(cat => (
+              <option key={cat.id} value={cat.name}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -127,6 +141,20 @@ export function TransactionForm({ goals, onClose, onCreated }: TransactionFormPr
             onChange={e => set('amount', e.target.value)}
             required
           />
+          {presets.filter(p => p.active).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {presets.filter(p => p.active).map(pre => (
+                <button
+                  key={pre.id}
+                  type="button"
+                  onClick={() => set('amount', pre.amount.toFixed(2))}
+                  className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-700 bg-zinc-800/40 text-zinc-300 hover:border-zinc-500 transition-base select-none"
+                >
+                  ${pre.amount} {pre.label ? `(${pre.label})` : ''}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -167,6 +195,25 @@ export function TransactionForm({ goals, onClose, onCreated }: TransactionFormPr
           >
             <option value="">Unlinked</option>
             {goals.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </div>
+
+        {/* Member assignment */}
+        <div>
+          <label className="text-section-label block mb-1">Assign to Member</label>
+          <select
+            id="select-tx-member"
+            className={inputClass}
+            style={{ ...inputStyle, cursor: 'pointer' }}
+            value={form.memberId}
+            onChange={e => set('memberId', e.target.value)}
+          >
+            <option value="">Myself</option>
+            {activeMembers.map(m => (
+              <option key={m.id} value={m.id}>
+                {m.nickname}
+              </option>
+            ))}
           </select>
         </div>
       </div>

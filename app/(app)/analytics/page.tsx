@@ -8,7 +8,7 @@ import { AchievementsGrid } from '@/components/analytics/achievements-grid'
 import { Loader2, RefreshCw } from 'lucide-react'
 
 export default function AnalyticsPage() {
-  const { goals, transactions, stats, setStats, getAuthHeader } = useFlowsStore()
+  const { goals, transactions, stats, setStats, getAuthHeader, categories } = useFlowsStore()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,6 +44,20 @@ export default function AnalyticsPage() {
     }
   }, [getAuthHeader, setStats])
 
+  // Category spending breakdown calculations
+  const categoryWithdrawals = transactions
+    .filter(t => t.type === 'withdrawal')
+    .reduce((acc, t) => {
+      const cat = t.category || 'Uncategorized'
+      acc[cat] = (acc[cat] || 0) + Math.abs(t.amount)
+      return acc
+    }, {} as Record<string, number>)
+
+  const sortedCategories = Object.entries(categoryWithdrawals)
+    .sort((a, b) => b[1] - a[1])
+
+  const totalSpending = Object.values(categoryWithdrawals).reduce((sum, val) => sum + val, 0)
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
@@ -76,6 +90,48 @@ export default function AnalyticsPage() {
             {stats?.monthlyTotals && (
               <MonthlyChart monthlyTotals={stats.monthlyTotals} />
             )}
+          </div>
+
+          {/* Category spending breakdown */}
+          <div className="card space-y-4">
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-100">Spending by Category</h2>
+              <p className="text-xs text-zinc-500 mt-0.5">Total withdrawal expenses broken down by category</p>
+            </div>
+            
+            <div className="grid sm:grid-cols-2 gap-4 pt-2">
+              {sortedCategories.length === 0 ? (
+                <p className="text-xs text-zinc-500 text-center py-6 sm:col-span-2">No withdrawal transactions logged yet.</p>
+              ) : (
+                sortedCategories.map(([category, amount]) => {
+                  const percentage = totalSpending > 0 ? (amount / totalSpending) * 100 : 0
+                  const catColor = categories.find(c => c.name.toLowerCase() === category.toLowerCase())?.color ?? 'var(--border)'
+
+                  return (
+                    <div key={category} className="space-y-1 p-3 rounded-lg border border-zinc-850 bg-zinc-900/10" style={{ borderColor: 'var(--border)' }}>
+                      <div className="flex items-center justify-between text-xs font-medium">
+                        <span className="text-zinc-300 flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: catColor }} />
+                          {category}
+                        </span>
+                        <span className="num text-zinc-400">
+                          ${amount.toFixed(2)} ({percentage.toFixed(0)}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden" style={{ background: 'rgba(var(--hover-rgb), 0.3)' }}>
+                        <div
+                          className="h-full rounded-full transition-all duration-300"
+                          style={{
+                            background: catColor,
+                            width: `${percentage}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
           </div>
 
           {/* Goal projections section */}
